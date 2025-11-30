@@ -145,7 +145,14 @@ app.get('/dashboard', async (c)=>{
       'accepted',
       'completed'
     ]).gte('created_at', startDate).lte('created_at', endDate);
-    const { data: serviceData } = await supabase.from('technical_service_requests').select('final_price, status, created_at').in('status', [
+    const { data: serviceData } = await supabase.from('technical_service_requests').select('estimated_price, final_price, status, created_at').not('estimated_price', 'is', null).gte('created_at', startDate).lte('created_at', endDate);
+    console.log('[ADMIN DASHBOARD] 🔧 Technical service data:', {
+      count: serviceData?.length || 0,
+      sample: serviceData?.[0],
+      totalRevenue: serviceData?.reduce((sum, s)=>sum + (s.final_price || s.estimated_price || 0), 0) || 0
+    });
+    const { data: sellData } = await supabase.from('sell_requests').select('admin_offer_price, status, created_at').in('status', [
+      'accepted',
       'completed'
     ]).gte('created_at', startDate).lte('created_at', endDate);
     // Calculate KV Store revenue (from delivered/in_transit orders)
@@ -164,7 +171,7 @@ app.get('/dashboard', async (c)=>{
       orders: kvRevenue,
       moving: kvMovingRevenue
     });
-    const totalRevenue = (ordersData?.reduce((sum, o)=>sum + (o.total_price || 0), 0) || 0) + (movingData?.reduce((sum, m)=>sum + (m.admin_price || 0), 0) || 0) + (serviceData?.reduce((sum, s)=>sum + (s.final_price || 0), 0) || 0) + kvRevenue + kvMovingRevenue;
+    const totalRevenue = (ordersData?.reduce((sum, o)=>sum + (o.total_price || 0), 0) || 0) + (movingData?.reduce((sum, m)=>sum + (m.admin_price || 0), 0) || 0) + (serviceData?.reduce((sum, s)=>sum + (s.final_price || s.estimated_price || 0), 0) || 0) + (sellData?.reduce((sum, s)=>sum + (s.admin_offer_price || 0), 0) || 0) + kvRevenue + kvMovingRevenue;
     // Total Requests Count
     const { count: ordersCount } = await supabase.from('orders').select('*', {
       count: 'exact',
@@ -363,15 +370,25 @@ app.get('/dashboard', async (c)=>{
       },
       {
         name: 'Teknik Servis',
-        value: serviceData?.reduce((sum, s)=>sum + (s.final_price || 0), 0) || 0,
+        value: serviceData?.reduce((sum, s)=>sum + (s.final_price || s.estimated_price || 0), 0) || 0,
         color: '#14b8a6' // teal
+      },
+      {
+        name: 'Ürün Alımı',
+        value: sellData?.reduce((sum, s)=>sum + (s.admin_offer_price || 0), 0) || 0,
+        color: '#a855f7' // purple
       }
     ];
     // ============================================
     // 4. CANCELLATION ANALYSIS
     // ============================================
-    const ordersCancellationRate = ordersCount ? (cancelledOrders || 0) / ordersCount * 100 : 0;
-    const movingCancellationRate = movingCount ? (cancelledMoving || 0) / movingCount * 100 : 0;
+    const totalOrdersCount = (ordersCount || 0) + kvOrdersFiltered.length;
+    const totalMovingCount = (movingCount || 0) + kvMovingFiltered.length;
+    const totalOrdersCancelled = (cancelledOrders || 0) + kvCancelledCount;
+    const totalMovingCancelled = (cancelledMoving || 0) + kvMovingCancelledCount;
+    
+    const ordersCancellationRate = totalOrdersCount > 0 ? (totalOrdersCancelled / totalOrdersCount) * 100 : 0;
+    const movingCancellationRate = totalMovingCount > 0 ? (totalMovingCancelled / totalMovingCount) * 100 : 0;
     const serviceCancellationRate = serviceCount ? (cancelledService || 0) / serviceCount * 100 : 0;
     const sellRejectionRate = sellCount ? (rejectedSell || 0) / sellCount * 100 : 0;
     const cancellationAnalysis = [
@@ -388,7 +405,7 @@ app.get('/dashboard', async (c)=>{
         rate: serviceCancellationRate
       },
       {
-        name: 'Ürün Satış (Red)',
+        name: 'Ürün Satış',
         rate: sellRejectionRate
       }
     ];

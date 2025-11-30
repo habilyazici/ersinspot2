@@ -294,30 +294,7 @@ export default function AdminDashboard() {
                   <Printer className="w-4 h-4" />
                 </Button>
 
-                <div className="h-6 w-px bg-white/30 mx-2" />
 
-                {/* Filter Buttons */}
-                <div className="flex gap-2">
-                  {[
-                    { value: 'today', label: 'Bugün' },
-                    { value: 'week', label: 'Bu Hafta' },
-                    { value: 'month', label: 'Bu Ay' },
-                    { value: '3months', label: '3 Ay' },
-                    { value: '6months', label: '6 Ay' },
-                    { value: 'all', label: 'Tümü' },
-                  ].map((f) => (
-                    <Button
-                      key={f.value}
-                      variant={filter === f.value ? 'secondary' : 'ghost'}
-                      size="sm"
-                      onClick={() => setFilter(f.value)}
-                      className={filter === f.value ? 'bg-white text-orange-600' : 'text-white hover:bg-white/20'}
-                      disabled={loading}
-                    >
-                      {f.label}
-                    </Button>
-                  ))}
-                </div>
               </div>
             </div>
           </div>
