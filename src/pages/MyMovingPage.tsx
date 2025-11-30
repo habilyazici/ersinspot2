@@ -24,7 +24,6 @@ import { projectId } from '../utils/supabase/info';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'sonner@2.0.3';
 import { FloatingContactButtons } from '../components/FloatingContactButtons';
-import MovingReportModal from '../components/MovingReportModal';
 
 export default function MyMovingPage() {
   const location = useLocation();
@@ -39,11 +38,9 @@ export default function MyMovingPage() {
   const [clearHistoryDialogOpen, setClearHistoryDialogOpen] = useState(false);
   const [timelineDialogOpen, setTimelineDialogOpen] = useState(false);
   const [offerDialogOpen, setOfferDialogOpen] = useState(false);
-  const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [selectedForCancel, setSelectedForCancel] = useState<{ id: number; requestNumber: string } | null>(null);
   const [selectedForTimeline, setSelectedForTimeline] = useState<any>(null);
   const [selectedBookingForOffer, setSelectedBookingForOffer] = useState<any>(null);
-  const [selectedForReport, setSelectedForReport] = useState<any>(null);
   const [cancellingId, setCancellingId] = useState<number | null>(null);
   const [isRespondingToOffer, setIsRespondingToOffer] = useState(false);
   
@@ -628,10 +625,7 @@ export default function MyMovingPage() {
                               variant="outline" 
                               size="sm" 
                               className="border-green-600 text-green-600 hover:bg-green-600 hover:text-white transition-all shadow-sm"
-                              onClick={() => {
-                                setSelectedForReport(booking);
-                                setReportDialogOpen(true);
-                              }}
+                              onClick={() => navigate(`/hesabim/raporlarim/nakliye/${booking.request_number}`)}
                             >
                               <FileBarChart className="w-4 h-4 mr-1.5" />
                               Raporu Görüntüle
@@ -956,16 +950,6 @@ export default function MyMovingPage() {
           )}
         </DialogContent>
       </Dialog>
-
-      {/* Rapor Modal */}
-      <MovingReportModal
-        open={reportDialogOpen}
-        onClose={() => {
-          setReportDialogOpen(false);
-          setSelectedForReport(null);
-        }}
-        request={selectedForReport}
-      />
 
       {/* Floating Contact Buttons */}
       <FloatingContactButtons />

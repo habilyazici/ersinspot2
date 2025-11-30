@@ -34,6 +34,7 @@ import MovingDetailPage from './pages/MovingDetailPage';
 import MyFavoritesPage from './pages/MyFavoritesPage';
 import MyReportsPage from './pages/MyReportsPage';
 import ReportViewPage from './pages/ReportViewPage';
+import MovingReportPage from './pages/MovingReportPage';
 import MySellRequestsPage from './pages/MySellRequestsPage';
 import SellRequestDetailPage from './pages/SellRequestDetailPage';
 import SellRequestProcessPage from './pages/SellRequestProcessPage';
@@ -117,6 +118,7 @@ export default function App() {
                     <Route path="/hesabim/favorilerim" element={<CustomerRoute><MyFavoritesPage /></CustomerRoute>} />
                     <Route path="/hesabim/raporlarim" element={<CustomerRoute><MyReportsPage /></CustomerRoute>} />
                     <Route path="/hesabim/raporlarim/:type/:id" element={<CustomerRoute><ReportViewPage /></CustomerRoute>} />
+                    <Route path="/hesabim/raporlarim/nakliye/:id" element={<CustomerRoute><MovingReportPage /></CustomerRoute>} />
                     <Route path="/hesabim/satis-taleplerim" element={<CustomerRoute><MySellRequestsPage /></CustomerRoute>} />
                     <Route path="/hesabim/satis-taleplerim/detay/:id" element={<CustomerRoute><SellRequestDetailPage /></CustomerRoute>} />
                     <Route path="/hesabim/satis-taleplerim/talep-detay/:id" element={<CustomerRoute><SellRequestDetailPage /></CustomerRoute>} />
@@ -142,6 +144,7 @@ export default function App() {
                     <Route path="/admin/randevular" element={<AdminRoute><AdminBookings /></AdminRoute>} />
                     <Route path="/admin/mesajlar" element={<AdminRoute><AdminMessages /></AdminRoute>} />
                     <Route path="/admin/raporlar/:type/:id" element={<AdminRoute><ReportViewPage /></AdminRoute>} />
+                    <Route path="/admin/raporlar/nakliye/:id" element={<AdminRoute><MovingReportPage /></AdminRoute>} />
                     
                     <Route path="/quick-fix" element={<QuickFixPage />} />
                     
