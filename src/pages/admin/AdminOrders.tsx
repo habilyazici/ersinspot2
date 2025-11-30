@@ -46,7 +46,6 @@ export default function AdminOrders() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditStatusModalOpen, setIsEditStatusModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
   const [isEditDateModalOpen, setIsEditDateModalOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<any>(null);
   const [newStatus, setNewStatus] = useState('');
@@ -426,58 +425,15 @@ export default function AdminOrders() {
     }
   };
 
-  // Tüm siparişleri silme
-  const handleDeleteAllOrders = async () => {
-    if (!accessToken) return;
 
-    const toastId = toast.loading('Tüm siparişler siliniyor...');
-
-    try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-0f4d2485/admin/orders/delete-all`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-          },
-        }
-      );
-
-      toast.dismiss(toastId);
-
-      if (!response.ok) {
-        toast.error('Siparişler silinemedi!');
-        return;
-      }
-
-      const data = await response.json();
-      setOrders([]);
-      toast.success(`${data.deletedOrders || 'Tüm'} sipariş başarıyla silindi! 🗑️`);
-      setIsDeleteAllModalOpen(false);
-    } catch (error) {
-      toast.dismiss(toastId);
-      console.error('Error deleting all orders:', error);
-      toast.error('Siparişler silinirken bir hata oluştu');
-    }
-  };
 
   return (
     <AdminLayout>
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl mb-2">Siparişler</h1>
-            <p className="text-gray-600">Tüm siparişleri yönetin ve durumlarını güncelleyin</p>
-          </div>
-          <Button
-            variant="destructive"
-            onClick={() => setIsDeleteAllModalOpen(true)}
-            className="bg-red-600 hover:bg-red-700"
-          >
-            <Trash2 className="w-4 h-4 mr-2" />
-            Tümünü Sil
-          </Button>
+        <div className="mb-8">
+          <h1 className="text-3xl mb-2">Siparişler</h1>
+          <p className="text-gray-600">Tüm siparişleri yönetin ve durumlarını güncelleyin</p>
         </div>
 
         {/* Statistic Cards */}
@@ -1489,48 +1445,6 @@ export default function AdminOrders() {
           </DialogContent>
         </Dialog>
 
-        {/* Tüm Siparişleri Sil Confirmation Modal */}
-        <Dialog open={isDeleteAllModalOpen} onOpenChange={setIsDeleteAllModalOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-red-700">
-                <AlertTriangle className="w-5 h-5" />
-                Tüm Siparişleri Sil
-              </DialogTitle>
-              <DialogDescription>
-                Bu işlem geri alınamaz! Tüm siparişler ve ilgili veriler kalıcı olarak silinecek.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4">
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-sm text-red-700 font-medium">
-                  ⚠️ Dikkat: {orders.length} adet sipariş silinecek!
-                </p>
-                <p className="text-xs text-red-600 mt-2">
-                  Bu işlem sipariş verilerini, ürün ilişkilerini ve durum geçmişlerini kalıcı olarak silecektir.
-                </p>
-              </div>
-
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => setIsDeleteAllModalOpen(false)}
-                >
-                  İptal
-                </Button>
-                <Button
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
-                  onClick={handleDeleteAllOrders}
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Tümünü Sil
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
     </AdminLayout>
   );
