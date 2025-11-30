@@ -50,7 +50,7 @@ import {
 } from 'lucide-react@0.487.0';
 import { toast } from 'sonner@2.0.3';
 import { Textarea } from '../../components/ui/textarea';
-import MovingReportModal from '../../components/MovingReportModal';
+import { Link } from 'react-router-dom';
 import {
   Select,
   SelectContent,
@@ -156,7 +156,6 @@ export default function AdminMovingManagement() {
   const [selectedRequest, setSelectedRequest] = useState<MovingRequest | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [offerModalOpen, setOfferModalOpen] = useState(false);
-  const [reportModalOpen, setReportModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
   const [isEditDateModalOpen, setIsEditDateModalOpen] = useState(false);
@@ -894,17 +893,15 @@ export default function AdminMovingManagement() {
                             )}
 
                             {request.status === 'completed' && (
-                              <Button
-                                size="sm"
-                                className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white shadow-sm"
-                                onClick={() => {
-                                  setSelectedRequest(request);
-                                  setReportModalOpen(true);
-                                }}
-                              >
-                                <FileBarChart className="w-4 h-4 mr-1.5" />
-                                Raporu Görüntüle
-                              </Button>
+                              <Link to={`/admin/raporlar/nakliye/${request.request_number}`}>
+                                <Button
+                                  size="sm"
+                                  className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white shadow-sm"
+                                >
+                                  <FileBarChart className="w-4 h-4 mr-1.5" />
+                                  Raporu Görüntüle
+                                </Button>
+                              </Link>
                             )}
 
                             <Button
@@ -1272,16 +1269,6 @@ export default function AdminMovingManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Rapor Modal */}
-      <MovingReportModal
-        open={reportModalOpen}
-        onClose={() => {
-          setReportModalOpen(false);
-          setSelectedRequest(null);
-        }}
-        request={selectedRequest}
-      />
 
       {/* Nakliye Tarihi Değiştirme Modal */}
       <Dialog open={isEditDateModalOpen} onOpenChange={setIsEditDateModalOpen}>
