@@ -469,6 +469,18 @@ app.get('/my-requests', async (c) => {
           status: req.status
         });
         
+        // Eşyaları getir
+        const { data: items } = await supabase
+          .from('moving_request_items')
+          .select('*')
+          .eq('request_id', req.id);
+        
+        // Fotoğrafları getir
+        const { data: photos } = await supabase
+          .from('moving_request_photos')
+          .select('*')
+          .eq('request_id', req.id);
+        
         allUserRequests.push({
           id: req.id,
           request_number: req.request_number,
@@ -484,9 +496,9 @@ app.get('/my-requests', async (c) => {
           to_floor: req.target_floor,
           to_has_elevator: req.elevator_to,
           home_size: req.home_size,
-          selected_items: [], // Ayrıca çekilebilir
-          custom_items: [], // Ayrıca çekilebilir
-          images: [], // Ayrıca çekilebilir
+          selected_items: (items || []).filter((item: any) => item.item_type === 'furniture'),
+          custom_items: (items || []).filter((item: any) => item.item_type === 'custom'),
+          images: photos || [],
           moving_date: req.moving_date,
           appointment_date: req.moving_date,
           preferred_time: req.preferred_time || '',
@@ -507,8 +519,22 @@ app.get('/my-requests', async (c) => {
       }
     }
 
+    // KV Store items dönüştürme fonksiyonu
+    const convertItemsToObjects = (items: any[]) => {
+      if (!items || items.length === 0) return [];
+      if (typeof items[0] === 'object' && items[0].item_name) return items;
+      return items.map((item: any) => ({
+        item_name: typeof item === 'string' ? item : item.name || item.item_name,
+        quantity: typeof item === 'object' ? (item.quantity || 1) : 1,
+        item_type: typeof item === 'object' ? item.item_type : 'furniture'
+      }));
+    };
+
     // KV taleplerini formatla ve ekle
     for (const req of userKvRequests) {
+      const selectedItemsConverted = convertItemsToObjects(req.selectedItems || []);
+      const customItemsConverted = convertItemsToObjects(req.customItems || []);
+      
       allUserRequests.push({
         id: req.requestNumber,
         request_number: req.requestNumber,
@@ -524,8 +550,8 @@ app.get('/my-requests', async (c) => {
         to_floor: req.toFloor,
         to_has_elevator: req.toHasElevator,
         home_size: req.homeSize,
-        selected_items: req.selectedItems,
-        custom_items: req.customItems,
+        selected_items: selectedItemsConverted,
+        custom_items: customItemsConverted,
         images: req.images,
         moving_date: req.appointmentDate,
         appointment_date: req.appointmentDate,
@@ -673,6 +699,26 @@ app.get('/request/:requestNumber', async (c) => {
 
     console.log('[MOVING REQUEST DETAIL] ✅ Request data prepared');
 
+    // KV Store'daki items string array ise object array'e dönüştür
+    const convertItemsToObjects = (items: any[]) => {
+      if (!items || items.length === 0) return [];
+      
+      // Eğer zaten object ise (item_name property'si varsa) olduğu gibi dön
+      if (typeof items[0] === 'object' && items[0].item_name) {
+        return items;
+      }
+      
+      // String array ise object array'e çevir
+      return items.map((item: any) => ({
+        item_name: typeof item === 'string' ? item : item.name || item.item_name,
+        quantity: typeof item === 'object' ? (item.quantity || 1) : 1,
+        item_type: typeof item === 'object' ? item.item_type : 'furniture'
+      }));
+    };
+
+    const selectedItemsConverted = convertItemsToObjects(request.selectedItems || []);
+    const customItemsConverted = convertItemsToObjects(request.customItems || []);
+
     // Veriyi frontend formatına çevir
     const formattedRequest = {
       id: request.requestNumber,
@@ -701,9 +747,9 @@ app.get('/request/:requestNumber', async (c) => {
       elevator_to: request.toHasElevator, // Frontend'de elevator_to olarak kullanılıyor
       
       home_size: request.homeSize,
-      selected_items: request.selectedItems || [],
-      custom_items: request.customItems || [],
-      items: [...(request.selectedItems || []), ...(request.customItems || [])], // Tüm items birleşik
+      selected_items: selectedItemsConverted,
+      custom_items: customItemsConverted,
+      items: [...selectedItemsConverted, ...customItemsConverted], // Tüm items birleşik
       images: request.images || [],
       photos: request.images || [], // Frontend'de photos olarak kullanılıyor
       
@@ -1197,8 +1243,22 @@ app.get('/admin/requests', async (c) => {
       }
     }
 
+    // KV Store items dönüştürme fonksiyonu (admin için)
+    const convertItemsToObjects = (items: any[]) => {
+      if (!items || items.length === 0) return [];
+      if (typeof items[0] === 'object' && items[0].item_name) return items;
+      return items.map((item: any) => ({
+        item_name: typeof item === 'string' ? item : item.name || item.item_name,
+        quantity: typeof item === 'object' ? (item.quantity || 1) : 1,
+        item_type: typeof item === 'object' ? item.item_type : 'furniture'
+      }));
+    };
+
     // KV'den talepleri ekle
     for (const req of kvRequests) {
+      const selectedItemsConverted = convertItemsToObjects(req.selectedItems || []);
+      const customItemsConverted = convertItemsToObjects(req.customItems || []);
+      
       allCombinedRequests.push({
         id: req.requestNumber,
         request_number: req.requestNumber,
@@ -1211,8 +1271,8 @@ app.get('/admin/requests', async (c) => {
         to_floor: req.toFloor,
         to_has_elevator: req.toHasElevator,
         home_size: req.homeSize,
-        selected_items: req.selectedItems || [],
-        custom_items: req.customItems || [],
+        selected_items: selectedItemsConverted,
+        custom_items: customItemsConverted,
         images: req.images || [],
         moving_date: req.appointmentDate,
         appointment_date: req.appointmentDate,
@@ -1298,7 +1358,9 @@ app.get('/admin/requests', async (c) => {
             phone: req.customerPhone || '',
             district: null
           },
-          items: req.selected_items || [], // Frontend için eşya listesi
+          items: [...(req.selected_items || []), ...(req.custom_items || [])], // Tüm items birleşik
+          photos: req.images || [], // Frontend'de photos olarak kullanılıyor
+          description: req.notes || '', // Frontend'de description olarak kullanılıyor
           source: req.source
         };
       })

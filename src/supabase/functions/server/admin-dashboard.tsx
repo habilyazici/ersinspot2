@@ -540,7 +540,384 @@ app.get('/dashboard', async (c) => {
     }
 
     // ============================================
-    // RESPONSE
+    // 11. YENİ METRİKLER - EN ÇOK FAVORİLERE EKLENEN ÜRÜNLER
+    // ============================================
+
+    const { data: allFavorites } = await supabase
+      .from('favorites')
+      .select('product_id')
+      .gte('created_at', startDate)
+      .lte('created_at', endDate);
+
+    const favoriteProductCounts: Record<string, number> = {};
+    allFavorites?.forEach(fav => {
+      const productId = fav.product_id;
+      if (!favoriteProductCounts[productId]) {
+        favoriteProductCounts[productId] = 0;
+      }
+      favoriteProductCounts[productId]++;
+    });
+
+    // Product bilgilerini çek
+    const topFavoriteProductIds = Object.entries(favoriteProductCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([id]) => id);
+
+    let topFavoriteProducts: any[] = [];
+    if (topFavoriteProductIds.length > 0) {
+      const { data: products } = await supabase
+        .from('products')
+        .select('id, name')
+        .in('id', topFavoriteProductIds);
+
+      topFavoriteProducts = topFavoriteProductIds
+        .map(id => {
+          const product = products?.find(p => p.id === id);
+          return {
+            name: product?.name || 'Bilinmeyen Ürün',
+            value: favoriteProductCounts[id],
+          };
+        });
+    }
+
+    // ============================================
+    // 12. SEPETE EKLENEN AMA SATILMAYAN ÜRÜNLER
+    // ============================================
+
+    // Tüm sepet öğeleri
+    const { data: allCartItems } = await supabase
+      .from('cart_items')
+      .select('product_id, created_at');
+
+    // Satın alınan ürünler
+    const { data: purchasedItems } = await supabase
+      .from('order_items')
+      .select('product_id, orders!inner(created_at, status)')
+      .in('orders.status', ['processing', 'shipped', 'delivered', 'completed'])
+      .gte('orders.created_at', startDate)
+      .lte('orders.created_at', endDate);
+
+    const purchasedProductIds = new Set(purchasedItems?.map(item => item.product_id) || []);
+    
+    const abandonedCartProducts: Record<string, number> = {};
+    allCartItems?.forEach(item => {
+      if (!purchasedProductIds.has(item.product_id)) {
+        if (!abandonedCartProducts[item.product_id]) {
+          abandonedCartProducts[item.product_id] = 0;
+        }
+        abandonedCartProducts[item.product_id]++;
+      }
+    });
+
+    const topAbandonedProductIds = Object.entries(abandonedCartProducts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([id]) => id);
+
+    let topAbandonedProducts: any[] = [];
+    if (topAbandonedProductIds.length > 0) {
+      const { data: products } = await supabase
+        .from('products')
+        .select('id, name')
+        .in('id', topAbandonedProductIds);
+
+      topAbandonedProducts = topAbandonedProductIds
+        .map(id => {
+          const product = products?.find(p => p.id === id);
+          return {
+            name: product?.name || 'Bilinmeyen Ürün',
+            value: abandonedCartProducts[id],
+          };
+        });
+    }
+
+    // Sepet terk oranı
+    const totalCartItems = allCartItems?.length || 0;
+    const totalPurchased = purchasedItems?.length || 0;
+    const cartAbandonmentRate = totalCartItems > 0 ? ((totalCartItems - totalPurchased) / totalCartItems) * 100 : 0;
+
+    // ============================================
+    // 13. EN AKTİF MÜŞTERİLER
+    // ============================================
+
+    const { data: customerOrders } = await supabase
+      .from('orders')
+      .select('customer_id, total_price, customers!inner(name, email)')
+      .gte('created_at', startDate)
+      .lte('created_at', endDate);
+
+    const customerActivity: Record<string, { name: string; email: string; orderCount: number; totalSpent: number }> = {};
+
+    customerOrders?.forEach(order => {
+      const customerId = order.customer_id;
+      if (!customerActivity[customerId]) {
+        customerActivity[customerId] = {
+          name: order.customers.name || 'İsimsiz',
+          email: order.customers.email || '',
+          orderCount: 0,
+          totalSpent: 0,
+        };
+      }
+      customerActivity[customerId].orderCount++;
+      customerActivity[customerId].totalSpent += order.total_price || 0;
+    });
+
+    const topActiveCustomers = Object.entries(customerActivity)
+      .sort((a, b) => b[1].orderCount - a[1].orderCount)
+      .slice(0, 10)
+      .map(([id, data]) => ({
+        name: data.name,
+        email: data.email,
+        orderCount: data.orderCount,
+        totalSpent: data.totalSpent,
+      }));
+
+    // ============================================
+    // 14. MÜŞTERİ SEGMENTASYONU
+    // ============================================
+
+    // Sadece sipariş veren müşteriler
+    const { data: orderOnlyCustomers } = await supabase
+      .from('customers')
+      .select('id')
+      .in('id', customerOrders?.map(o => o.customer_id) || []);
+
+    // Teknik servis kullanan müşteriler
+    const { data: serviceCustomers } = await supabase
+      .from('service_requests')
+      .select('customer_id')
+      .gte('created_at', startDate)
+      .lte('created_at', endDate);
+
+    // Nakliye kullanan müşteriler
+    const { data: movingCustomers } = await supabase
+      .from('moving_requests')
+      .select('customer_id')
+      .gte('created_at', startDate)
+      .lte('created_at', endDate);
+
+    // Ürün satış talebi oluşturan müşteriler
+    const { data: sellCustomers } = await supabase
+      .from('sell_requests')
+      .select('customer_id')
+      .gte('created_at', startDate)
+      .lte('created_at', endDate);
+
+    const orderCustomerIds = new Set(customerOrders?.map(o => o.customer_id) || []);
+    const serviceCustomerIds = new Set(serviceCustomers?.map(s => s.customer_id) || []);
+    const movingCustomerIds = new Set(movingCustomers?.map(m => m.customer_id) || []);
+    const sellCustomerIds = new Set(sellCustomers?.map(s => s.customer_id) || []);
+
+    // Sadece ürün alanlar (diğer servisleri kullanmayanlar)
+    const onlyOrdersCount = Array.from(orderCustomerIds).filter(
+      id => !serviceCustomerIds.has(id) && !movingCustomerIds.has(id) && !sellCustomerIds.has(id)
+    ).length;
+
+    // Sadece servis kullananlar
+    const onlyServiceCount = Array.from(serviceCustomerIds).filter(
+      id => !orderCustomerIds.has(id) && !movingCustomerIds.has(id) && !sellCustomerIds.has(id)
+    ).length;
+
+    // Çoklu servis kullananlar
+    const multiServiceCount = Array.from(new Set([
+      ...orderCustomerIds,
+      ...serviceCustomerIds,
+      ...movingCustomerIds,
+      ...sellCustomerIds,
+    ])).filter(id => {
+      let serviceCount = 0;
+      if (orderCustomerIds.has(id)) serviceCount++;
+      if (serviceCustomerIds.has(id)) serviceCount++;
+      if (movingCustomerIds.has(id)) serviceCount++;
+      if (sellCustomerIds.has(id)) serviceCount++;
+      return serviceCount >= 2;
+    }).length;
+
+    const customerSegmentation = [
+      { name: 'Sadece Ürün Alıyor', value: onlyOrdersCount },
+      { name: 'Sadece Servis Kullanıyor', value: onlyServiceCount },
+      { name: 'Çoklu Hizmet Kullanan', value: multiServiceCount },
+    ];
+
+    // ============================================
+    // 15. AYLIK GELİR KARŞILAŞTIRMASI
+    // ============================================
+
+    const thisMonth = new Date();
+    const thisMonthStart = new Date(thisMonth.getFullYear(), thisMonth.getMonth(), 1);
+    const thisMonthEnd = new Date(thisMonth.getFullYear(), thisMonth.getMonth() + 1, 0, 23, 59, 59);
+
+    const lastMonth = new Date(thisMonth.getFullYear(), thisMonth.getMonth() - 1, 1);
+    const lastMonthStart = lastMonth;
+    const lastMonthEnd = new Date(thisMonth.getFullYear(), thisMonth.getMonth(), 0, 23, 59, 59);
+
+    // Bu ay geliri
+    const { data: thisMonthOrders } = await supabase
+      .from('orders')
+      .select('total_price')
+      .in('status', ['processing', 'shipped', 'delivered'])
+      .gte('created_at', thisMonthStart.toISOString())
+      .lte('created_at', thisMonthEnd.toISOString());
+
+    const { data: thisMonthMoving } = await supabase
+      .from('moving_requests')
+      .select('admin_price')
+      .in('status', ['accepted', 'completed'])
+      .gte('created_at', thisMonthStart.toISOString())
+      .lte('created_at', thisMonthEnd.toISOString());
+
+    const { data: thisMonthService } = await supabase
+      .from('service_requests')
+      .select('final_price')
+      .eq('status', 'completed')
+      .gte('created_at', thisMonthStart.toISOString())
+      .lte('created_at', thisMonthEnd.toISOString());
+
+    const thisMonthRevenue = 
+      (thisMonthOrders?.reduce((sum, o) => sum + (o.total_price || 0), 0) || 0) +
+      (thisMonthMoving?.reduce((sum, m) => sum + (m.admin_price || 0), 0) || 0) +
+      (thisMonthService?.reduce((sum, s) => sum + (s.final_price || 0), 0) || 0);
+
+    // Geçen ay geliri
+    const { data: lastMonthOrders } = await supabase
+      .from('orders')
+      .select('total_price')
+      .in('status', ['processing', 'shipped', 'delivered'])
+      .gte('created_at', lastMonthStart.toISOString())
+      .lte('created_at', lastMonthEnd.toISOString());
+
+    const { data: lastMonthMoving } = await supabase
+      .from('moving_requests')
+      .select('admin_price')
+      .in('status', ['accepted', 'completed'])
+      .gte('created_at', lastMonthStart.toISOString())
+      .lte('created_at', lastMonthEnd.toISOString());
+
+    const { data: lastMonthService } = await supabase
+      .from('service_requests')
+      .select('final_price')
+      .eq('status', 'completed')
+      .gte('created_at', lastMonthStart.toISOString())
+      .lte('created_at', lastMonthEnd.toISOString());
+
+    const lastMonthRevenue = 
+      (lastMonthOrders?.reduce((sum, o) => sum + (o.total_price || 0), 0) || 0) +
+      (lastMonthMoving?.reduce((sum, m) => sum + (m.admin_price || 0), 0) || 0) +
+      (lastMonthService?.reduce((sum, s) => sum + (s.final_price || 0), 0) || 0);
+
+    const revenueChange = lastMonthRevenue > 0 
+      ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 
+      : 0;
+
+    const monthlyRevenueComparison = {
+      thisMonth: thisMonthRevenue,
+      lastMonth: lastMonthRevenue,
+      change: Math.round(revenueChange * 10) / 10,
+    };
+
+    // ============================================
+    // 16. MODÜL BAZINDA ORTALAMA İŞLEM DEĞERİ
+    // ============================================
+
+    const avgOrderValue = ordersCount && ordersCount > 0 
+      ? (ordersData?.reduce((sum, o) => sum + (o.total_price || 0), 0) || 0) / ordersCount 
+      : 0;
+
+    const avgMovingValue = movingCount && movingCount > 0
+      ? (movingData?.reduce((sum, m) => sum + (m.admin_price || 0), 0) || 0) / movingCount
+      : 0;
+
+    const avgServiceValue = serviceCount && serviceCount > 0
+      ? (serviceData?.reduce((sum, s) => sum + (s.final_price || 0), 0) || 0) / serviceCount
+      : 0;
+
+    const avgTransactionValues = [
+      { name: 'Sipariş', value: Math.round(avgOrderValue) },
+      { name: 'Nakliye', value: Math.round(avgMovingValue) },
+      { name: 'Teknik Servis', value: Math.round(avgServiceValue) },
+    ];
+
+    // ============================================
+    // 17. MODÜL BAZINDA TAMAMLANMA ORANLARI
+    // ============================================
+
+    const { count: completedOrders } = await supabase
+      .from('orders')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'delivered')
+      .gte('created_at', startDate)
+      .lte('created_at', endDate);
+
+    const { count: completedMoving } = await supabase
+      .from('moving_requests')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'completed')
+      .gte('created_at', startDate)
+      .lte('created_at', endDate);
+
+    const { count: completedService } = await supabase
+      .from('service_requests')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'completed')
+      .gte('created_at', startDate)
+      .lte('created_at', endDate);
+
+    const { count: completedSell } = await supabase
+      .from('sell_requests')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'completed')
+      .gte('created_at', startDate)
+      .lte('created_at', endDate);
+
+    const completionRates = [
+      { 
+        name: 'Sipariş', 
+        rate: ordersCount ? Math.round((completedOrders || 0) / ordersCount * 100 * 10) / 10 : 0 
+      },
+      { 
+        name: 'Nakliye', 
+        rate: movingCount ? Math.round((completedMoving || 0) / movingCount * 100 * 10) / 10 : 0 
+      },
+      { 
+        name: 'Teknik Servis', 
+        rate: serviceCount ? Math.round((completedService || 0) / serviceCount * 100 * 10) / 10 : 0 
+      },
+      { 
+        name: 'Ürün Satış', 
+        rate: sellCount ? Math.round((completedSell || 0) / sellCount * 100 * 10) / 10 : 0 
+      },
+    ];
+
+    // ============================================
+    // 18. STOK VE ÜRÜN ANALİZİ (Aylık Grafik)
+    // ============================================
+
+    const stockByMonth: any[] = [];
+    
+    for (let i = 5; i >= 0; i--) {
+      const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59);
+      const monthName = monthStart.toLocaleDateString('tr-TR', { month: 'short', year: 'numeric' });
+
+      // O ay için ürün sayısı ve toplam değer
+      const { data: monthProducts } = await supabase
+        .from('products')
+        .select('price, stock')
+        .lte('created_at', monthEnd.toISOString());
+
+      const productCount = monthProducts?.length || 0;
+      const totalValue = monthProducts?.reduce((sum, p) => sum + ((p.price || 0) * (p.stock || 0)), 0) || 0;
+
+      stockByMonth.push({
+        month: monthName,
+        productCount,
+        totalValue: Math.round(totalValue),
+      });
+    }
+
+    // ============================================
+    // RESPONSE (YENİ VERİLER EKLENDİ)
     // ============================================
 
     const dashboardData = {
@@ -551,6 +928,7 @@ app.get('/dashboard', async (c) => {
         acceptanceRate: Math.round(acceptanceRate * 10) / 10,
         avgResponseTime: Math.round(avgResponseTime * 10) / 10,
         customersCount: customersCount || 0,
+        cartAbandonmentRate: Math.round(cartAbandonmentRate * 10) / 10, // YENİ
       },
       charts: {
         monthlyTrend,
@@ -561,8 +939,16 @@ app.get('/dashboard', async (c) => {
         topProblematicProducts,
         topProblemCategories,
         dailyTrend,
+        topFavoriteProducts, // YENİ
+        topAbandonedProducts, // YENİ
+        customerSegmentation, // YENİ
+        avgTransactionValues, // YENİ
+        completionRates, // YENİ
+        stockByMonth, // YENİ
       },
       pendingWork,
+      topActiveCustomers, // YENİ
+      monthlyRevenueComparison, // YENİ
     };
 
     console.log('[ADMIN DASHBOARD] ✅ Dashboard data fetched successfully');

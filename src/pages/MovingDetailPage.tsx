@@ -51,6 +51,7 @@ const getItemNameInTurkish = (itemName: string): string => {
     
     // Beyaz Eşya
     'fridge': 'Buzdolabı',
+    'washing': 'Çamaşır Makinesi', // KV Store'da washing olarak kaydedilmiş
     'washing_machine': 'Çamaşır Makinesi',
     'dishwasher': 'Bulaşık Makinesi',
     'oven': 'Fırın',
@@ -616,9 +617,13 @@ export default function MovingDetailPage() {
                           <div className="flex items-center gap-3">
                             <Package className="w-5 h-5 text-[var(--brand-teal-600)]" />
                             <div>
-                              <p className="font-medium text-gray-800">{getItemNameInTurkish(item.item_name)}</p>
+                              <p className="font-medium text-gray-800">
+                                {item.item_type === 'custom' ? item.item_name : getItemNameInTurkish(item.item_name)}
+                              </p>
                               {item.item_type && (
-                                <p className="text-xs text-gray-500">{item.item_type}</p>
+                                <p className="text-xs text-gray-500">
+                                  {item.item_type === 'custom' ? '✏️ Özel Eşya' : '📦 Standart'}
+                                </p>
                               )}
                             </div>
                           </div>

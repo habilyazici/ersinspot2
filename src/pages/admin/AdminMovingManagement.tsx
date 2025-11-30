@@ -1129,18 +1129,18 @@ export default function AdminMovingManagement() {
                     Taşınacak Eşyalar ({selectedRequest.items.length})
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-                    {selectedRequest.items.map((item) => (
-                      <div key={item.id} className="bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow">
-                        <div className="flex items-center justify-between gap-3">
+                    {selectedRequest.items.map((item, idx) => (
+                      <div key={idx} className="bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex items-start justify-between gap-3">
                           <div className="flex items-center gap-2 flex-1 min-w-0">
                             <div className="bg-purple-100 p-2 rounded-lg flex-shrink-0">
                               <Package className="w-4 h-4 text-purple-600" />
                             </div>
-                            <span className="text-sm font-medium text-gray-800 break-words leading-tight">
+                            <span className="text-sm font-medium text-gray-800 break-words leading-tight flex-1">
                               {getItemNameInTurkish(item.item_name)}
                             </span>
                           </div>
-                          <span className="bg-purple-100 text-purple-700 text-xs font-bold px-2 py-1 rounded-full flex-shrink-0">
+                          <span className="bg-purple-100 text-purple-700 text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0 whitespace-nowrap">
                             x{item.quantity}
                           </span>
                         </div>
@@ -1175,12 +1175,13 @@ export default function AdminMovingManagement() {
                       <div 
                         key={index}
                         className="aspect-square bg-white rounded-lg overflow-hidden border-2 border-transparent hover:border-[#f97316] transition-all cursor-pointer group shadow-md hover:shadow-xl min-w-0"
-                        onClick={() => window.open(photo.photo_url, '_blank')}
+                        onClick={() => window.open(typeof photo === 'string' ? photo : photo.photo_url, '_blank')}
                       >
                         <img 
-                          src={photo.photo_url} 
+                          src={typeof photo === 'string' ? photo : photo.photo_url} 
                           alt={`Eşya ${index + 1}`}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                          onError={(e) => { e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EFoto Yüklenemedi%3C/text%3E%3C/svg%3E'; }}
                         />
                       </div>
                     ))}
