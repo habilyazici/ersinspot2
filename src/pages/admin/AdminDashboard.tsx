@@ -392,7 +392,7 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-orange-900">
-                {data.kpis.avgResponseTime.toFixed(1)} sa
+                {data.kpis.avgResponseTime.toFixed(1)} saat
               </div>
               <p className="text-xs text-orange-600 mt-1">
                 {data.kpis.avgResponseTime < 24 ? '⚡ Hızlı' : data.kpis.avgResponseTime < 48 ? '✅ Normal' : '⏰ Yavaş'}
@@ -405,7 +405,7 @@ export default function AdminDashboard() {
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm text-teal-700 flex items-center gap-2">
                     <Users className="w-4 h-4" />
-                    Toplam Müşteri
+                    Toplam Kayıtlı Müşteri
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -442,7 +442,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Main Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {!data ? (
             // Skeleton Loaders for Charts
             <>
@@ -468,7 +468,7 @@ export default function AdminDashboard() {
           ) : (
             <>
               {/* Monthly Trend */}
-              <Card className="shadow-xl">
+              <Card className="shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] border-t-4 border-orange-500 animate-fade-in">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <TrendingUp className="w-5 h-5 text-[var(--brand-orange-600)]" />
@@ -477,7 +477,7 @@ export default function AdminDashboard() {
                   <CardDescription>Son 6 aylık talep sayıları</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
+                  <ResponsiveContainer width="100%" height={280}>
                     <LineChart data={data.charts.monthlyTrend}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis dataKey="month" stroke="#6b7280" />
@@ -491,17 +491,17 @@ export default function AdminDashboard() {
                     }}
                   />
                   <Legend />
-                  <Line type="monotone" dataKey="sipariş" stroke={COLORS.orange} strokeWidth={2} />
-                  <Line type="monotone" dataKey="nakliye" stroke={COLORS.navy} strokeWidth={2} />
-                  <Line type="monotone" dataKey="teknik servis" stroke={COLORS.teal} strokeWidth={2} />
-                  <Line type="monotone" dataKey="ürün satış" stroke={COLORS.purple} strokeWidth={2} />
+                  <Line type="monotone" dataKey="sipariş" stroke={COLORS.orange} strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} animationDuration={1000} />
+                  <Line type="monotone" dataKey="nakliye" stroke={COLORS.navy} strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} animationDuration={1000} animationBegin={100} />
+                  <Line type="monotone" dataKey="teknik servis" stroke={COLORS.teal} strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} animationDuration={1000} animationBegin={200} />
+                  <Line type="monotone" dataKey="ürün satış" stroke={COLORS.purple} strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} animationDuration={1000} animationBegin={300} />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
 
           {/* Revenue Distribution */}
-          <Card className="shadow-xl">
+          <Card className="shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] border-t-4 border-blue-500 animate-fade-in" style={{ animationDelay: '0.1s' }}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <PieChart className="w-5 h-5 text-[var(--brand-orange-600)]" />
@@ -524,6 +524,8 @@ export default function AdminDashboard() {
                     outerRadius={90}
                     fill="#8884d8"
                     dataKey="value"
+                    animationBegin={0}
+                    animationDuration={1200}
                   >
                     {data.charts.revenueDistribution.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
@@ -550,29 +552,42 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        {/* Cancellation Analysis */}
-        <div className="grid grid-cols-1 gap-6">
+        {/* Cancellation Analysis & Problem Categories */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {!data ? (
-            <Card className="shadow-xl">
-              <CardHeader>
-                <div className="h-6 bg-gray-200 rounded animate-pulse w-48 mb-2" />
-                <div className="h-4 bg-gray-200 rounded animate-pulse w-36" />
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px] bg-gray-100 rounded animate-pulse" />
-              </CardContent>
-            </Card>
+            <>
+              <Card className="shadow-xl">
+                <CardHeader>
+                  <div className="h-6 bg-gray-200 rounded animate-pulse w-48 mb-2" />
+                  <div className="h-4 bg-gray-200 rounded animate-pulse w-36" />
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[280px] bg-gray-100 rounded animate-pulse" />
+                </CardContent>
+              </Card>
+              <Card className="shadow-xl">
+                <CardHeader>
+                  <div className="h-6 bg-gray-200 rounded animate-pulse w-48 mb-2" />
+                  <div className="h-4 bg-gray-200 rounded animate-pulse w-36" />
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[280px] bg-gray-100 rounded animate-pulse" />
+                </CardContent>
+              </Card>
+            </>
           ) : (
-            <Card className="shadow-xl border-red-100">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-red-700">
-                  <AlertTriangle className="w-5 h-5" />
-                  İptal Analizi (%)
-                </CardTitle>
-                <CardDescription>Modüllere göre iptal/red oranları</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
+            <>
+              {/* Cancellation Analysis */}
+              <Card className="shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] border-t-4 border-red-500 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-red-700">
+                    <AlertTriangle className="w-5 h-5" />
+                    İptal Analizi (%)
+                  </CardTitle>
+                  <CardDescription>Modüllere göre iptal/red oranları</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={data.charts.cancellationAnalysis}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="name" stroke="#6b7280" />
@@ -585,16 +600,45 @@ export default function AdminDashboard() {
                     borderRadius: '8px',
                   }}
                 />
-                <Bar dataKey="rate" fill={COLORS.red} radius={[8, 8, 0, 0]} />
+                <Bar dataKey="rate" fill={COLORS.red} radius={[8, 8, 0, 0]} animationDuration={1000} animationBegin={0} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
+
+              {/* Problem Categories */}
+              <Card className="shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] border-t-4 border-teal-500 animate-fade-in" style={{ animationDelay: '0.3s' }}>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertCircle className="w-5 h-5 text-[var(--brand-orange-600)]" />
+                    Teknik Servis Problem Kategorileri
+                  </CardTitle>
+                  <CardDescription>En sık karşılaşılan sorunlar</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={280}>
+                    <BarChart data={data.charts.topProblemCategories}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="name" stroke="#6b7280" />
+                    <YAxis stroke="#6b7280" />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#fff', 
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                      }}
+                    />
+                    <Bar dataKey="value" fill={COLORS.teal} radius={[8, 8, 0, 0]} animationDuration={1000} animationBegin={0} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+            </>
           )}
         </div>
 
         {/* Product Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {!data ? (
             <>
               {[1, 2].map((i) => (
@@ -604,15 +648,15 @@ export default function AdminDashboard() {
                     <div className="h-4 bg-gray-200 rounded animate-pulse w-36" />
                   </CardHeader>
                   <CardContent>
-                    <div className="h-[300px] bg-gray-100 rounded animate-pulse" />
-                  </CardContent>
+                  <div className="h-[280px] bg-gray-100 rounded animate-pulse" />
+                </CardContent>
                 </Card>
               ))}
             </>
           ) : (
             <>
           {/* Top Sell Request Products */}
-          <Card className="shadow-xl">
+          <Card className="shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] border-t-4 border-purple-500 animate-fade-in" style={{ animationDelay: '0.4s' }}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Package className="w-5 h-5 text-[var(--brand-purple-600)]" />
@@ -621,7 +665,7 @@ export default function AdminDashboard() {
               <CardDescription>Hangi markaların ürünleri daha çok satılmak isteniyor</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={data.charts.topSellRequestProducts} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis type="number" stroke="#6b7280" />
@@ -633,14 +677,14 @@ export default function AdminDashboard() {
                       borderRadius: '8px',
                     }}
                   />
-                  <Bar dataKey="value" fill={COLORS.purple} radius={[0, 8, 8, 0]} />
+                  <Bar dataKey="value" fill={COLORS.purple} radius={[0, 8, 8, 0]} animationDuration={1000} animationBegin={0} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
 
           {/* Most Problematic Products */}
-          <Card className="shadow-xl border-red-100">
+          <Card className="shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] border-t-4 border-red-500 animate-fade-in" style={{ animationDelay: '0.5s' }}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-red-700">
                 <Wrench className="w-5 h-5" />
@@ -649,7 +693,7 @@ export default function AdminDashboard() {
               <CardDescription>En çok teknik servis talebi oluşturulan</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={data.charts.topProblematicProducts} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis type="number" stroke="#6b7280" />
@@ -661,7 +705,7 @@ export default function AdminDashboard() {
                       borderRadius: '8px',
                     }}
                   />
-                  <Bar dataKey="value" fill={COLORS.red} radius={[0, 8, 8, 0]} />
+                  <Bar dataKey="value" fill={COLORS.red} radius={[0, 8, 8, 0]} animationDuration={1000} animationBegin={0} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -669,46 +713,6 @@ export default function AdminDashboard() {
             </>
           )}
         </div>
-
-        {/* Problem Categories */}
-        {!data ? (
-          <Card className="shadow-xl">
-            <CardHeader>
-              <div className="h-6 bg-gray-200 rounded animate-pulse w-64 mb-2" />
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-48" />
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px] bg-gray-100 rounded animate-pulse" />
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="shadow-xl">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-[var(--brand-orange-600)]" />
-                Teknik Servis Problem Kategorileri
-              </CardTitle>
-              <CardDescription>En sık karşılaşılan sorunlar</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={data.charts.topProblemCategories}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="name" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#fff', 
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                  }}
-                />
-                <Bar dataKey="value" fill={COLORS.teal} radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-        )}
 
       </div>
     </div>
