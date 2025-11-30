@@ -408,18 +408,18 @@ app.get('/dashboard', async (c)=>{
         value
       }));
     // ============================================
-    // 6. TOP SELL REQUEST PRODUCTS
+    // 6. TOP SELL REQUEST BRANDS
     // ============================================
     const { data: sellRequests } = await supabase.from('sell_requests').select('title, brand').gte('created_at', startDate).lte('created_at', endDate);
-    const sellRequestProducts = {};
+    const sellRequestBrands = {};
     sellRequests?.forEach((req)=>{
-      const key = `${req.brand || 'Bilinmiyor'} ${req.title || 'Ürün'}`;
-      if (!sellRequestProducts[key]) {
-        sellRequestProducts[key] = 0;
+      const brand = req.brand || 'Bilinmiyor';
+      if (!sellRequestBrands[brand]) {
+        sellRequestBrands[brand] = 0;
       }
-      sellRequestProducts[key]++;
+      sellRequestBrands[brand]++;
     });
-    const topSellRequestProducts = Object.entries(sellRequestProducts).sort((a, b)=>b[1] - a[1]).slice(0, 10).map(([name, value])=>({
+    const topSellRequestProducts = Object.entries(sellRequestBrands).sort((a, b)=>b[1] - a[1]).slice(0, 10).map(([name, value])=>({
         name,
         value
       }));

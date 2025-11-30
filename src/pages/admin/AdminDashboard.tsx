@@ -561,15 +561,18 @@ export default function AdminDashboard() {
               <CardDescription>Modüllere göre gelir dağılımı</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={350}>
                 <RechartsPie>
                   <Pie
                     data={data.charts.revenueDistribution}
                     cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={(entry) => `${entry.name}: ${formatCurrency(entry.value)}`}
-                    outerRadius={100}
+                    cy="45%"
+                    labelLine={true}
+                    label={(entry) => {
+                      const percent = ((entry.value / data.charts.revenueDistribution.reduce((sum: number, item: any) => sum + item.value, 0)) * 100).toFixed(1);
+                      return `${entry.name}: ${formatCurrency(entry.value)}`;
+                    }}
+                    outerRadius={90}
                     fill="#8884d8"
                     dataKey="value"
                   >
@@ -585,6 +588,11 @@ export default function AdminDashboard() {
                       borderRadius: '8px',
                     }}
                   />
+                  <Legend 
+                    verticalAlign="bottom" 
+                    height={36}
+                    formatter={(value: string, entry: any) => `${value}: ${formatCurrency(entry.payload.value)}`}
+                  />
                 </RechartsPie>
               </ResponsiveContainer>
             </CardContent>
@@ -593,100 +601,46 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        {/* Cancellation Analysis & Daily Trend */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Cancellation Analysis */}
+        <div className="grid grid-cols-1 gap-6">
           {!data ? (
-            <>
-              <Card className="shadow-xl">
-                <CardHeader>
-                  <div className="h-6 bg-gray-200 rounded animate-pulse w-48 mb-2" />
-                  <div className="h-4 bg-gray-200 rounded animate-pulse w-36" />
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[300px] bg-gray-100 rounded animate-pulse" />
-                </CardContent>
-              </Card>
-              <Card className="shadow-xl">
-                <CardHeader>
-                  <div className="h-6 bg-gray-200 rounded animate-pulse w-48 mb-2" />
-                  <div className="h-4 bg-gray-200 rounded animate-pulse w-36" />
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[300px] bg-gray-100 rounded animate-pulse" />
-                </CardContent>
-              </Card>
-            </>
+            <Card className="shadow-xl">
+              <CardHeader>
+                <div className="h-6 bg-gray-200 rounded animate-pulse w-48 mb-2" />
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-36" />
+              </CardHeader>
+              <CardContent>
+                <div className="h-[300px] bg-gray-100 rounded animate-pulse" />
+              </CardContent>
+            </Card>
           ) : (
-            <>
-              {/* Cancellation Analysis */}
-              <Card className="shadow-xl border-red-100">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-red-700">
-                    <AlertTriangle className="w-5 h-5" />
-                    İptal Analizi (%)
-                  </CardTitle>
-                  <CardDescription>Modüllere göre iptal/red oranları</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={data.charts.cancellationAnalysis}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="name" stroke="#6b7280" />
-                  <YAxis stroke="#6b7280" />
-                  <Tooltip 
-                    formatter={(value: number) => `%${value.toFixed(1)}`}
-                    contentStyle={{ 
-                      backgroundColor: '#fff', 
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                    }}
-                  />
-                  <Bar dataKey="rate" fill={COLORS.red} radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          {/* Daily Trend */}
-          <Card className="shadow-xl">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-[var(--brand-orange-600)]" />
-                Günlük Talep Trendi
-              </CardTitle>
-              <CardDescription>Son 30 günlük toplam talep sayıları</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={data.charts.dailyTrend}>
-                  <defs>
-                    <linearGradient id="colorTalepler" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={COLORS.orange} stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor={COLORS.orange} stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="day" stroke="#6b7280" />
-                  <YAxis stroke="#6b7280" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#fff', 
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                    }}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="talepler" 
-                    stroke={COLORS.orange} 
-                    fillOpacity={1} 
-                    fill="url(#colorTalepler)" 
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-            </>
+            <Card className="shadow-xl border-red-100">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-red-700">
+                  <AlertTriangle className="w-5 h-5" />
+                  İptal Analizi (%)
+                </CardTitle>
+                <CardDescription>Modüllere göre iptal/red oranları</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={data.charts.cancellationAnalysis}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="name" stroke="#6b7280" />
+                <YAxis stroke="#6b7280" />
+                <Tooltip 
+                  formatter={(value: number) => `%${value.toFixed(1)}`}
+                  contentStyle={{ 
+                    backgroundColor: '#fff', 
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                  }}
+                />
+                <Bar dataKey="rate" fill={COLORS.red} radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
           )}
         </div>
 
@@ -741,9 +695,9 @@ export default function AdminDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Package className="w-5 h-5 text-[var(--brand-purple-600)]" />
-                En Çok Satış Talebi Oluşturulan
+                En Çok Satış Talebi Olan Markalar
               </CardTitle>
-              <CardDescription>Kullanıcılar hangi ürünleri satmak istiyor</CardDescription>
+              <CardDescription>Hangi markaların ürünleri daha çok satılmak isteniyor</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
