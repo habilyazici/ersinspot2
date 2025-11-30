@@ -44,7 +44,7 @@ export default function MovingReportPage() {
         
         // Nakliye taleplerini çek - admin veya user endpoint'ine göre
         const endpoint = isAdminRoute 
-          ? `https://${projectId}.supabase.co/functions/v1/make-server-0f4d2485/admin/moving/requests`
+          ? `https://${projectId}.supabase.co/functions/v1/make-server-0f4d2485/moving/admin/requests`
           : `https://${projectId}.supabase.co/functions/v1/make-server-0f4d2485/moving/my-requests`;
         
         const response = await fetch(endpoint, {
