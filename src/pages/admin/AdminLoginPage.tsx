@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Lock, Mail, Shield, Eye, EyeOff, Home } from 'lucide-react@0.487.0';
+import { Lock, Mail, Shield, Eye, EyeOff } from 'lucide-react@0.487.0';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -94,32 +94,38 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1e3a8a] via-[#1e3a8a] to-[#2d4a9d] flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-[#0f172a] via-[#1e3a8a] to-[#7c3aed] flex items-center justify-center p-4 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-0 w-96 h-96 bg-[#f97316]/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#f97316]/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/5 rounded-full blur-3xl"></div>
+        {/* Animated gradient orbs */}
+        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-gradient-to-br from-[#f97316]/20 to-[#ea580c]/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gradient-to-tl from-[#8b5cf6]/20 to-[#7c3aed]/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/3 w-[400px] h-[400px] bg-gradient-to-br from-[#3b82f6]/15 to-[#1e3a8a]/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+        
+        {/* Floating particles */}
+        <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-white/30 rounded-full animate-ping" style={{ animationDuration: '3s' }}></div>
+        <div className="absolute top-3/4 right-1/4 w-2 h-2 bg-[#f97316]/40 rounded-full animate-ping" style={{ animationDuration: '4s', animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 right-1/3 w-2 h-2 bg-[#8b5cf6]/40 rounded-full animate-ping" style={{ animationDuration: '5s', animationDelay: '2s' }}></div>
       </div>
 
       {/* Login Card */}
       <div className="w-full max-w-md relative z-10">
         {/* Header with Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl shadow-2xl mb-6">
-            <img src={logo} alt="Ersin Spot" className="h-14 w-auto" />
+        <div className="text-center mb-8 animate-fade-in">
+          <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-white to-gray-50 rounded-3xl shadow-2xl mb-6 hover:scale-110 transition-transform duration-300">
+            <img src={logo} alt="Ersin Spot" className="h-16 w-auto drop-shadow-lg" />
           </div>
-          <h1 className="text-white mb-2 flex items-center justify-center gap-3">
-            <Shield className="w-8 h-8" />
+          <h1 className="text-white mb-2 flex items-center justify-center gap-3 drop-shadow-lg">
+            <Shield className="w-8 h-8 text-[#f97316] animate-pulse" />
             Ersin Spot Yönetim Sistemi
           </h1>
-          <p className="text-gray-200 text-sm">Güvenli Admin Paneli</p>
+          <p className="text-gray-200 text-sm drop-shadow-md">Güvenli Admin Paneli</p>
         </div>
 
         {/* Login Form Card */}
-        <div className="bg-white rounded-2xl shadow-2xl p-8 backdrop-blur-sm">
+        <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20 animate-fade-in" style={{ animationDelay: '0.2s' }}>
           <div className="mb-6">
-            <h2 className="text-gray-900 mb-1">Hoş Geldiniz</h2>
+            <h2 className="text-gray-900 mb-1 font-bold">Hoş Geldiniz</h2>
             <p className="text-gray-500 text-sm">Devam etmek için giriş yapın</p>
           </div>
 
@@ -135,7 +141,7 @@ export default function AdminLoginPage() {
                   id="email"
                   type="email"
                   placeholder="admin@ersinspot.com"
-                  className="pl-10 h-12 border-gray-300 focus:border-[#1e3a8a] focus:ring-[#1e3a8a]"
+                  className="pl-10 h-12 border-gray-300 focus:border-[#7c3aed] focus:ring-[#7c3aed] bg-gray-50 focus:bg-white transition-colors"
                   value={loginData.email}
                   onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
                   required
@@ -154,7 +160,7 @@ export default function AdminLoginPage() {
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
-                  className="pl-10 pr-10 h-12 border-gray-300 focus:border-[#1e3a8a] focus:ring-[#1e3a8a]"
+                  className="pl-10 pr-10 h-12 border-gray-300 focus:border-[#7c3aed] focus:ring-[#7c3aed] bg-gray-50 focus:bg-white transition-colors"
                   value={loginData.password}
                   onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
                   required
@@ -189,7 +195,7 @@ export default function AdminLoginPage() {
             {/* Login Button */}
             <Button
               type="submit"
-              className="w-full h-12 bg-gradient-to-r from-[#1e3a8a] to-[#2d4a9d] hover:from-[#1e3a8a]/90 hover:to-[#2d4a9d]/90 text-white font-semibold shadow-lg"
+              className="w-full h-12 bg-gradient-to-r from-[#1e3a8a] via-[#7c3aed] to-[#f97316] hover:from-[#1e3a8a]/90 hover:via-[#7c3aed]/90 hover:to-[#f97316]/90 text-white font-semibold shadow-xl hover:shadow-2xl hover:scale-[1.02] transition-all duration-300"
               size="lg"
               disabled={loading}
             >
@@ -197,24 +203,11 @@ export default function AdminLoginPage() {
               {loading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
             </Button>
           </form>
-
-          {/* Website Link */}
-          <div className="mt-4 text-center">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full h-10 border-[#1e3a8a] text-[#1e3a8a] hover:bg-[#1e3a8a] hover:text-white transition-colors"
-              onClick={() => navigate('/')}
-            >
-              <Home className="w-4 h-4 mr-2" />
-              Web Sitesine Git
-            </Button>
-          </div>
         </div>
 
         {/* Footer */}
         <div className="text-center mt-6">
-          <p className="text-gray-200 text-sm">
+          <p className="text-gray-200 text-sm drop-shadow-lg">
             © 2025 Ersin Spot. Tüm hakları saklıdır.
           </p>
         </div>

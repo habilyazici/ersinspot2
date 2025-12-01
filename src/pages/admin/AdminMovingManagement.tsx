@@ -493,14 +493,6 @@ export default function AdminMovingManagement() {
             </h1>
             <p className="text-gray-600 mt-1">Müşteri nakliye taleplerini görüntüleyin ve yönetin</p>
           </div>
-          <Button
-            variant="destructive"
-            onClick={() => setIsDeleteAllModalOpen(true)}
-            className="bg-red-600 hover:bg-red-700"
-          >
-            <Trash2 className="w-4 h-4 mr-2" />
-            Tümünü Sil
-          </Button>
         </div>
 
         {/* Stats Cards */}

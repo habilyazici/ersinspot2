@@ -336,27 +336,67 @@ html {
 /* Print Styles - PDF Format */
 @media print {
   @page {
-    size: A4;
-    margin: 20mm;
+    size: A4 landscape;
+    margin: 10mm;
   }
 
   body {
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
-  /* Navbar, Footer ve diğer UI elementlerini gizle */
+  /* Navbar, Footer, Sidebar ve diğer UI elementlerini gizle */
   nav,
   header,
   footer,
+  aside,
   .print\\:hidden {
     display: none !important;
   }
 
-  /* Sadece rapor içeriğini göster */
+  /* Sadece rapor içeriğini göster - Tam genişlik */
   body > div:first-child > div:first-child {
     padding-top: 0 !important;
     margin-top: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  /* Dashboard container'ı tam genişlik */
+  .min-h-screen {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  /* Max-width sınırlamalarını kaldır */
+  .max-w-7xl,
+  .max-w-6xl,
+  .max-w-5xl {
+    max-width: 100% !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  /* Grid'leri yazdırmada optimize et */
+  .grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Card'ları küçült */
+  .shadow-xl,
+  .shadow-2xl {
+    box-shadow: none !important;
+    border: 1px solid #e5e7eb !important;
+  }
+
+  /* Grafik boyutlarını küçült */
+  .recharts-wrapper {
+    height: 200px !important;
   }
 
   /* Sayfa kırılmalarını optimize et */

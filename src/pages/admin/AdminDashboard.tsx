@@ -168,8 +168,10 @@ export default function AdminDashboard() {
     if (!data) return;
     
     try {
-      let csvContent = 'data:text/csv;charset=utf-8,';
-      csvContent += '=== ERSINSPOT DASHBOARD RAPORU ===\n\n';
+      let csvContent = 'data:text/csv;charset=utf-8,\uFEFF';
+      csvContent += '=== ERSINSPOT DASHBOARD RAPORU ===\n';
+      csvContent += `Tarih: ${new Date().toLocaleDateString('tr-TR')}\n`;
+      csvContent += `Filtre: ${filter === 'today' ? 'Bugün' : filter === 'week' ? 'Bu Hafta' : filter === 'month' ? 'Bu Ay' : 'Tüm Zamanlar'}\n\n`;
       
       // KPIs
       csvContent += 'ANA METRIKLER\n';
@@ -178,8 +180,26 @@ export default function AdminDashboard() {
       csvContent += `İptal Oranı,%${data.kpis.cancellationRate}\n`;
       csvContent += `Kabul Oranı,%${data.kpis.acceptanceRate}\n`;
       csvContent += `Ort. Yanıt Süresi,${data.kpis.avgResponseTime} saat\n`;
-      csvContent += `Müşteri Sayısı,${data.kpis.customersCount}\n`;
+      csvContent += `Toplam Kayıtlı Müşteri,${data.kpis.customersCount}\n`;
       csvContent += `Sepet Terk Oranı,%${data.kpis.cartAbandonmentRate}\n\n`;
+      
+      // Revenue Distribution
+      csvContent += 'GELİR/GİDER DAĞILIMI\n';
+      csvContent += 'Modül,Tutar\n';
+      data.charts.revenueDistribution.forEach((item: any) => {
+        csvContent += `${item.name},${formatCurrency(item.value)}\n`;
+      });
+      csvContent += '\n';
+      
+      // Monthly Trend
+      if (data.charts.monthlyTrend && data.charts.monthlyTrend.length > 0) {
+        csvContent += 'AYLIK TREND\n';
+        csvContent += 'Ay,Sipariş,Nakliye,Teknik Servis,Ürün Satış\n';
+        data.charts.monthlyTrend.forEach((item: any) => {
+          csvContent += `${item.month},${formatCurrency(item.sipariş || 0)},${formatCurrency(item.nakliye || 0)},${formatCurrency(item['teknik servis'] || 0)},${formatCurrency(item['ürün satış'] || 0)}\n`;
+        });
+        csvContent += '\n';
+      }
       
       // Top selling products
       csvContent += 'EN ÇOK SATAN ÜRÜNLER\n';
@@ -187,24 +207,45 @@ export default function AdminDashboard() {
       data.charts.topSellingProducts.forEach((p: any) => {
         csvContent += `${p.name},${p.value}\n`;
       });
+      csvContent += '\n';
+      
+      // Cancellation Analysis
+      if (data.charts.cancellationReasons && data.charts.cancellationReasons.length > 0) {
+        csvContent += 'İPTAL NEDENLERİ\n';
+        csvContent += 'Neden,Sayı\n';
+        data.charts.cancellationReasons.forEach((item: any) => {
+          csvContent += `${item.name},${item.value}\n`;
+        });
+        csvContent += '\n';
+      }
+      
+      // Problem Categories
+      if (data.charts.problemCategories && data.charts.problemCategories.length > 0) {
+        csvContent += 'PROBLEM KATEGORİLERİ\n';
+        csvContent += 'Kategori,Sayı\n';
+        data.charts.problemCategories.forEach((item: any) => {
+          csvContent += `${item.name},${item.value}\n`;
+        });
+        csvContent += '\n';
+      }
       
       const encodedUri = encodeURI(csvContent);
       const link = document.createElement('a');
       link.setAttribute('href', encodedUri);
-      link.setAttribute('download', `dashboard_rapor_${new Date().toISOString().split('T')[0]}.csv`);
+      link.setAttribute('download', `ersinspot_dashboard_${filter}_${new Date().toISOString().split('T')[0]}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       
       toast.success('Rapor indirildi', {
-        description: 'CSV dosyası başarıyla oluşturuldu',
+        description: 'Tüm dashboard verileri CSV olarak kaydedildi',
       });
     } catch (error) {
       toast.error('Export hatası', {
         description: 'Rapor oluşturulamadı',
       });
     }
-  }, [data]);
+  }, [data, filter]);
 
   // Print dashboard
   const printDashboard = useCallback(() => {
@@ -505,9 +546,9 @@ export default function AdminDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <PieChart className="w-5 h-5 text-[var(--brand-orange-600)]" />
-                Gelir Dağılımı
+                Gelir/Gider Dağılımı
               </CardTitle>
-              <CardDescription>Modüllere göre gelir dağılımı</CardDescription>
+              <CardDescription>Modüllere göre gelir/gider dağılımı</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={350}>
@@ -518,8 +559,9 @@ export default function AdminDashboard() {
                     cy="45%"
                     labelLine={true}
                     label={(entry) => {
-                      const percent = ((entry.value / data.charts.revenueDistribution.reduce((sum: number, item: any) => sum + item.value, 0)) * 100).toFixed(1);
-                      return `${entry.name}: ${formatCurrency(entry.value)}`;
+                      const isExpense = entry.name.includes('Giderler');
+                      const displayValue = isExpense ? `-${formatCurrency(entry.value)}` : formatCurrency(entry.value);
+                      return `${entry.name.replace(' (-)', '')}: ${displayValue}`;
                     }}
                     outerRadius={90}
                     fill="#8884d8"
@@ -532,7 +574,10 @@ export default function AdminDashboard() {
                     ))}
                   </Pie>
                   <Tooltip 
-                    formatter={(value: number) => formatCurrency(value)}
+                    formatter={(value: number, name: string) => {
+                      const isExpense = name.includes('Giderler');
+                      return isExpense ? `-${formatCurrency(value)}` : formatCurrency(value);
+                    }}
                     contentStyle={{ 
                       backgroundColor: '#fff', 
                       border: '1px solid #e5e7eb',
@@ -542,7 +587,12 @@ export default function AdminDashboard() {
                   <Legend 
                     verticalAlign="bottom" 
                     height={36}
-                    formatter={(value: string, entry: any) => `${value}: ${formatCurrency(entry.payload.value)}`}
+                    formatter={(value: string, entry: any) => {
+                      const isExpense = value.includes('Giderler');
+                      const displayName = value.replace(' (-)', '');
+                      const displayValue = isExpense ? `-${formatCurrency(entry.payload.value)}` : formatCurrency(entry.payload.value);
+                      return `${displayName}: ${displayValue}`;
+                    }}
                   />
                 </RechartsPie>
               </ResponsiveContainer>
@@ -593,7 +643,7 @@ export default function AdminDashboard() {
                 <XAxis dataKey="name" stroke="#6b7280" />
                 <YAxis stroke="#6b7280" />
                 <Tooltip 
-                  formatter={(value: number) => `%${value.toFixed(1)}`}
+                  formatter={(value: number) => [`%${value.toFixed(1)}`, 'İptal Oranı']}
                   contentStyle={{ 
                     backgroundColor: '#fff', 
                     border: '1px solid #e5e7eb',
@@ -622,6 +672,8 @@ export default function AdminDashboard() {
                     <XAxis dataKey="name" stroke="#6b7280" />
                     <YAxis stroke="#6b7280" />
                     <Tooltip 
+                      labelFormatter={(label) => label}
+                      formatter={(value: number) => [value, 'Adet']}
                       contentStyle={{ 
                         backgroundColor: '#fff', 
                         border: '1px solid #e5e7eb',
@@ -671,6 +723,7 @@ export default function AdminDashboard() {
                   <XAxis type="number" stroke="#6b7280" />
                   <YAxis dataKey="name" type="category" width={100} stroke="#6b7280" />
                   <Tooltip 
+                    formatter={(value: number) => [value, 'Talep Sayısı']}
                     contentStyle={{ 
                       backgroundColor: '#fff', 
                       border: '1px solid #e5e7eb',
@@ -699,6 +752,7 @@ export default function AdminDashboard() {
                   <XAxis type="number" stroke="#6b7280" />
                   <YAxis dataKey="name" type="category" width={100} stroke="#6b7280" />
                   <Tooltip 
+                    formatter={(value: number) => [value, 'Servis Talebi']}
                     contentStyle={{ 
                       backgroundColor: '#fff', 
                       border: '1px solid #e5e7eb',

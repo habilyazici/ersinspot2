@@ -65,10 +65,63 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      // Arama mantığı - sayfa türüne göre filtrele
-      console.log('Arama yapılıyor:', searchQuery);
-      // TODO: Her sayfada arama state'ini güncellemek için event/context kullan
+    if (!searchQuery.trim()) return;
+
+    const query = searchQuery.toLowerCase().trim();
+    
+    // Hızlı navigasyon - sayfa adına göre yönlendir
+    const navigationMap: Record<string, string> = {
+      'dashboard': '/admin/dashboard',
+      'ana sayfa': '/admin/dashboard',
+      'ürün': '/admin/urunler',
+      'urun': '/admin/urunler',
+      'ürün yönetimi': '/admin/urunler',
+      'sipariş': '/admin/siparisler',
+      'siparis': '/admin/siparisler',
+      'siparişler': '/admin/siparisler',
+      'nakliye': '/admin/nakliye',
+      'nakliyat': '/admin/nakliye',
+      'taşıma': '/admin/nakliye',
+      'alım': '/admin/satis-talepleri',
+      'alim': '/admin/satis-talepleri',
+      'ürün alım': '/admin/satis-talepleri',
+      'satış': '/admin/satis-talepleri',
+      'satis': '/admin/satis-talepleri',
+      'teknik': '/admin/teknik-servis',
+      'servis': '/admin/teknik-servis',
+      'teknik servis': '/admin/teknik-servis',
+      'onarım': '/admin/teknik-servis',
+      'mesaj': '/admin/mesajlar',
+      'mesajlar': '/admin/mesajlar',
+      'iletişim': '/admin/mesajlar',
+      'hızlı': '/admin/hizli-erisim',
+      'hizli': '/admin/hizli-erisim',
+    };
+
+    // Arama sorgusunu kontrol et
+    if (navigationMap[query]) {
+      navigate(navigationMap[query]);
+      setSearchQuery('');
+      toast.success('Yönlendiriliyor', {
+        description: `${menuItems.find(m => m.path === navigationMap[query])?.label} sayfasına gidiyorsunuz`,
+      });
+    } else {
+      // Kısmi eşleşme kontrolü
+      const matchedKey = Object.keys(navigationMap).find(key => 
+        key.includes(query) || query.includes(key)
+      );
+      
+      if (matchedKey) {
+        navigate(navigationMap[matchedKey]);
+        setSearchQuery('');
+        toast.success('Yönlendiriliyor', {
+          description: `${menuItems.find(m => m.path === navigationMap[matchedKey])?.label} sayfasına gidiyorsunuz`,
+        });
+      } else {
+        toast.info('Sayfa bulunamadı', {
+          description: 'Dashboard, Ürün, Sipariş, Nakliye, Alım, Teknik Servis, Mesaj gibi anahtar kelimeler deneyin',
+        });
+      }
     }
   };
 
@@ -76,7 +129,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full bg-gradient-to-b from-[#1e3a8a] to-[#1e3a8a]/95 text-white transition-all duration-300 z-50 ${
+        className={`print:hidden fixed top-0 left-0 h-full bg-gradient-to-b from-[#1e3a8a] to-[#1e3a8a]/95 text-white transition-all duration-300 z-50 ${
           isSidebarOpen ? 'w-64' : 'w-20'
         }`}
       >
@@ -132,12 +185,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
       {/* Main Content Area */}
       <div
-        className={`transition-all duration-300 ${
+        className={`transition-all duration-300 print:ml-0 ${
           isSidebarOpen ? 'ml-64' : 'ml-20'
         }`}
       >
         {/* Top Navbar */}
-        <header className="h-20 bg-white border-b border-gray-200 px-8 flex items-center justify-between sticky top-0 z-40">
+        <header className="print:hidden h-20 bg-white border-b border-gray-200 px-8 flex items-center justify-between sticky top-0 z-40">
           {/* Search Bar */}
           <div className="flex-1 max-w-xl">
             <form onSubmit={handleSearch}>
