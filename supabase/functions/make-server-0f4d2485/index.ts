@@ -1,11 +1,8 @@
-// Ersin Spot Backend - Main Entry Point
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-// Ana server dosyasını import et
-// NOT: Deno'da .tsx uzantısı gerekiyor
+// Ersin Spot Backend - Supabase Edge Function Entry Point
+// Ana server dosyasını import et ve serve et
 import app from "../../../src/supabase/functions/server/index.tsx";
 
-console.log("🚀 Ersin Spot Backend Server starting...");
+console.log("🚀 Ersin Spot Backend Server starting from Supabase Edge Functions...");
 
-// Serve the Hono app
-serve(app.fetch);
+// Supabase Edge Functions için Deno.serve kullan
+Deno.serve(app.fetch);

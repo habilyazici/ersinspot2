@@ -1,7 +1,7 @@
 // API Service for Ersin Spot
 import { projectId, publicAnonKey } from '../utils/supabase/info';
 
-const API_BASE_URL = `https://${projectId}.supabase.co/functions/v1/make-server-0f4d2485`;
+const API_BASE_URL = `https://${projectId}.supabase.co/functions/v1/smart-action`;
 
 // Helper function to get auth headers
 function getAuthHeaders(): HeadersInit {

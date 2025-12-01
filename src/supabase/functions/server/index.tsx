@@ -8151,4 +8151,10 @@ app.get("/make-server-0f4d2485/report/order/:orderId", async (c) => {
   }
 });
 
-Deno.serve(app.fetch);
+// Export app for Supabase Edge Functions
+export default app;
+
+// Start server if running directly (not as module)
+if (import.meta.main) {
+  Deno.serve(app.fetch);
+}
